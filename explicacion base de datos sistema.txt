@@ -1,0 +1,13 @@
+Nombre de la base de datos en env.= intecorp_test
+user de mi base en .env= root
+sin paswoord
+Una vez creada, se debe ejecutar el comando para ejecutar las migraciones
+seguido de esto, ejecutar los seeders para que el sistema ingrese los datos de ususarios de prueba y roles
+Seeder de roles: php artisan db:seed --class=RoleSeeder 
+seeder de ususarios: php artisan db:seed --class=UserSeeder
+Usuario de pruebas; admin@gmail.com 
+contraseña: admin123
+
+usuario de pruebas 2
+vendedor@gmail.com
+contraseña: vendedor123
