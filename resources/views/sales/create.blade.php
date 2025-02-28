@@ -13,10 +13,11 @@
                     <select name="products[0][id]" class="w-2/3 px-4 py-2 border border-gray-300 rounded-lg" required>
                         <option value="">Selecciona un producto</option>
                         @foreach ($products as $product)
-                            <option value="{{ $product->id }}">{{ $product->name }} - Q{{ $product->price }}</option>
+                            <option value="{{ $product->id }}" data-price="{{ $product->price }}">{{ $product->name }} - Q{{ $product->price }}</option>
                         @endforeach
                     </select>
                     <input type="number" name="products[0][quantity]" class="w-1/3 px-4 py-2 border border-gray-300 rounded-lg" placeholder="Cantidad" required min="1">
+                    <button type="button" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg" onclick="addToCart(0)">Agregar</button>
                 </div>
             </div>
             <button type="button" id="add-product" class="mt-4 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg">Agregar otro producto</button>
@@ -57,34 +58,45 @@
         let productIndex = 1;
 
         // Función para agregar productos al carrito
-        function addToCart(productId, productName, productPrice, quantity) {
+        function addToCart(index) {
+            const productSelect = document.querySelector(`select[name="products[${index}][id]"]`);
+            const quantityInput = document.querySelector(`input[name="products[${index}][quantity]"]`);
             const cartItems = document.getElementById('cart-items');
-            const row = document.createElement('tr');
 
-            row.innerHTML = `
-                <td class="border border-gray-300 px-4 py-2">${productName}</td>
-                <td class="border border-gray-300 px-4 py-2">${quantity}</td>
-                <td class="border border-gray-300 px-4 py-2">Q${(productPrice * quantity).toFixed(2)}</td>
-                <td class="border border-gray-300 px-4 py-2">
-                    <button type="button" class="text-red-600" onclick="removeProduct(this)">Eliminar</button>
-                </td>
-            `;
-            cartItems.appendChild(row);
+            const productId = productSelect.value;
+            const productName = productSelect.options[productSelect.selectedIndex].text;
+            const productPrice = parseFloat(productSelect.options[productSelect.selectedIndex].getAttribute('data-price'));
+            const quantity = parseInt(quantityInput.value);
 
-            // Crear un campo oculto para cada producto en el carrito
-            const inputId = document.createElement('input');
-            inputId.type = 'hidden';
-            inputId.name = `products[${productIndex}][id]`;
-            inputId.value = productId;
-            document.querySelector('form').appendChild(inputId);
+            if (productId && quantity > 0) {
+                const subtotal = (productPrice * quantity).toFixed(2);
 
-            const inputQuantity = document.createElement('input');
-            inputQuantity.type = 'hidden';
-            inputQuantity.name = `products[${productIndex}][quantity]`;
-            inputQuantity.value = quantity;
-            document.querySelector('form').appendChild(inputQuantity);
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="border border-gray-300 px-4 py-2">${productName}</td>
+                    <td class="border border-gray-300 px-4 py-2">${quantity}</td>
+                    <td class="border border-gray-300 px-4 py-2">Q${subtotal}</td>
+                    <td class="border border-gray-300 px-4 py-2">
+                        <button type="button" class="text-red-600" onclick="removeProduct(this)">Eliminar</button>
+                    </td>
+                `;
+                cartItems.appendChild(row);
 
-            productIndex++;
+                // Crear los campos ocultos para los productos
+                const inputId = document.createElement('input');
+                inputId.type = 'hidden';
+                inputId.name = `products[${productIndex}][id]`;
+                inputId.value = productId;
+                document.querySelector('form').appendChild(inputId);
+
+                const inputQuantity = document.createElement('input');
+                inputQuantity.type = 'hidden';
+                inputQuantity.name = `products[${productIndex}][quantity]`;
+                inputQuantity.value = quantity;
+                document.querySelector('form').appendChild(inputQuantity);
+
+                productIndex++;
+            }
         }
 
         // Función para eliminar productos del carrito
@@ -96,14 +108,20 @@
         // Agregar producto al carrito al seleccionar
         document.getElementById('add-product').addEventListener('click', function () {
             const productFields = document.getElementById('product-fields');
-            const productId = productFields.querySelector('select').value;
-            const productName = productFields.querySelector('select option:checked').text;
-            const productPrice = parseFloat(productFields.querySelector('select option:checked').text.split('$')[1]);
-            const quantity = productFields.querySelector('input').value;
-
-            if (productId && quantity > 0) {
-                addToCart(productId, productName, productPrice, quantity);
-            }
+            const newProductField = document.createElement('div');
+            newProductField.classList.add('product-field', 'flex', 'space-x-4');
+            newProductField.innerHTML = `
+                <select name="products[${productIndex}][id]" class="w-2/3 px-4 py-2 border border-gray-300 rounded-lg" required>
+                    <option value="">Selecciona un producto</option>
+                    @foreach ($products as $product)
+                        <option value="{{ $product->id }}" data-price="{{ $product->price }}">{{ $product->name }} - Q{{ $product->price }}</option>
+                    @endforeach
+                </select>
+                <input type="number" name="products[${productIndex}][quantity]" class="w-1/3 px-4 py-2 border border-gray-300 rounded-lg" placeholder="Cantidad" required min="1">
+                <button type="button" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg" onclick="addToCart(${productIndex})">Agregar</button>
+            `;
+            productFields.appendChild(newProductField);
+            productIndex++;
         });
     </script>
 @endsection
