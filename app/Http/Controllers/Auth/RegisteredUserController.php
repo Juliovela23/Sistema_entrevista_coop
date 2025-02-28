@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
-
+use App\Models\Roles;
 class RegisteredUserController extends Controller
 {
     /**
@@ -20,7 +20,8 @@ class RegisteredUserController extends Controller
      */
     public function create(): View
     {
-        return view('auth.register');
+        $roles = Roles::all(); // Obtén todos los roles
+        return view('auth.register', compact('roles')); // Pasa los roles a la vista
     }
 
     /**
@@ -29,23 +30,30 @@ class RegisteredUserController extends Controller
      * @throws \Illuminate\Validation\ValidationException
      */
     public function store(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
+{
+    // Validar los campos del formulario, incluido el 'role_id'
+    $request->validate([
+        'name' => ['required', 'string', 'max:255'],
+        'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+        'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        'role_id' => ['required', 'exists:roles,id'],  // Validar que el rol existe en la tabla 'roles'
+    ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+    // Crear el usuario con el role_id
+    $user = User::create([
+        'name' => $request->name,
+        'email' => $request->email,
+        'password' => Hash::make($request->password),
+        'role_id' => $request->role_id,  // Asignar el rol al usuario
+    ]);
 
-        event(new Registered($user));
+    // Activar el evento de registro de usuario
+    event(new Registered($user));
 
-        Auth::login($user);
+    // Iniciar sesión automáticamente después del registro
+    Auth::login($user);
 
-        return redirect(RouteServiceProvider::HOME);
-    }
+    // Redirigir al usuario a la página de inicio
+    return redirect(RouteServiceProvider::HOME);
+}
 }

@@ -21,7 +21,7 @@ use App\Http\Controllers\SaleController;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('auth.login');
 });
 
 Route::middleware(['auth'])->group(function () {
